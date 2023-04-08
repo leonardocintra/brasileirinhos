@@ -1,19 +1,128 @@
 import {
-  BadgeDelta,
+  AreaChart,
+  Callout,
   Card,
+  DonutChart,
   Flex,
   Grid,
-  Metric,
-  ProgressBar,
   Tab,
   TabList,
   Text,
   Title,
 } from "@tremor/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import IPessoa from "../interfaces/IPessoa";
+import { usePessoa } from "./api/catarina.api";
+
+type Sexo = {
+  tipo: string;
+  quantidade: number;
+};
+
+type Relatorio = {
+  date: string;
+  masculino: number;
+  feminino: number;
+};
+
+const chartdata = [
+  {
+    date: "Jan 22",
+    SemiAnalysis: 2890,
+    "The Pragmatic Engineer": 2338,
+  },
+  {
+    date: "Feb 22",
+    SemiAnalysis: 2756,
+    "The Pragmatic Engineer": 2103,
+  },
+  {
+    date: "Mar 22",
+    SemiAnalysis: 3322,
+    "The Pragmatic Engineer": 2194,
+  },
+  {
+    date: "Apr 22",
+    SemiAnalysis: 3470,
+    "The Pragmatic Engineer": 2108,
+  },
+  {
+    date: "May 22",
+    SemiAnalysis: 3475,
+    "The Pragmatic Engineer": 1812,
+  },
+  {
+    date: "Jun 22",
+    SemiAnalysis: 3129,
+    "The Pragmatic Engineer": 1726,
+  },
+];
+
+const relatorioCadatro: Relatorio[] = [];
 
 export default function Home() {
   const [selectedView, setSelectedView] = useState("1");
+  const [pessoas, setPessoas] = useState<IPessoa[]>();
+
+  const { pessoaData, pessoaIsLoading, pessoaError } = usePessoa();
+
+  useEffect(() => {
+    if (pessoaData) {
+      setPessoas(pessoaData);
+    }
+  }, [pessoaData]);
+
+  if (!pessoas) {
+    return (
+      <div>
+        <h2>carregando pessoas ... </h2>
+      </div>
+    );
+  }
+
+  let sexoM = 0;
+  let sexoF = 0;
+  const dataLimite = new Date();
+  dataLimite.setDate(dataLimite.getDate() - 90);
+
+
+  const pessoasUltimosDias = pessoas.filter((p) => p.createdAt > dataLimite);
+  pessoasUltimosDias.map((p) => {
+    const cadastroLocaleDate = p.createdAt.toLocaleDateString();
+
+    if (relatorioCadatro.filter((r) => r.date === cadastroLocaleDate)) {
+      
+    }
+
+    relatorioCadatro.push({
+      masculino: 1,
+      feminino: 2,
+      date: cadastroLocaleDate,
+    });
+  });
+
+  pessoas.map((pessoaData) => {
+    if (pessoaData.sexo === "m") {
+      sexoM++;
+    } else {
+      sexoF++;
+    }
+  });
+  const sexoDasPessoas: Sexo[] = [];
+  sexoDasPessoas.push(
+    {
+      tipo: "Masculino",
+      quantidade: sexoM,
+    },
+    {
+      tipo: "Feminino",
+      quantidade: sexoF,
+    }
+  );
+
+  const dataFormatter = (number: number) => {
+    return "$ " + Intl.NumberFormat("us").format(number).toString();
+  };
 
   return (
     <main className="bg-slate-50 p-6 sm:p-10">
@@ -25,60 +134,41 @@ export default function Home() {
         className="mt-6"
         onValueChange={(value) => setSelectedView(value)}
       >
-        <Tab value={"1"} text={"Cadastro"} />
-        <Tab value={"2"} text={"Gerenciamento"} />
+        <Tab value={"1"} text={"Dashboard"} />
+        <Tab value={"2"} text={"Administrativo"} />
       </TabList>
 
       {selectedView === "1" ? (
         <>
           <Grid numColsLg={3} className="mt-6 gap-6">
             <Card className="max-w-lg">
-              <Flex alignItems="start">
-                <div>
-                  <Text>Sales</Text>
-                  <Metric>$ 12,699</Metric>
-                </div>
-                <BadgeDelta deltaType="moderateIncrease">13.2%</BadgeDelta>
-              </Flex>
-              <Flex className="mt-4">
-                <Text className="truncate">68% ($ 149,940)</Text>
-                <Text> $ 220,500 </Text>
-              </Flex>
-              <ProgressBar percentageValue={15.9} className="mt-2" />
+              <Title className="text-center">Pessoas / Sexo</Title>
+              <DonutChart
+                className="mt-6"
+                data={sexoDasPessoas}
+                category="quantidade"
+                index="tipo"
+                colors={["blue", "fuchsia"]}
+              />
+              <Callout title="Observação" color="yellow" className="mt-3">
+                Se o sexo não for informado no cadastro, o padrão é MASCULINO
+              </Callout>
             </Card>
-            <Card className="max-w-lg">
-              <Flex alignItems="start">
-                <div>
-                  <Text>Sales</Text>
-                  <Metric>$ 12,699</Metric>
-                </div>
-                <BadgeDelta deltaType="moderateIncrease">13.2%</BadgeDelta>
-              </Flex>
-              <Flex className="mt-4">
-                <Text className="truncate">68% ($ 149,940)</Text>
-                <Text> $ 220,500 </Text>
-              </Flex>
-              <ProgressBar percentageValue={15.9} className="mt-2" />
-            </Card>
-            <Card className="max-w-lg">
-              <Flex alignItems="start">
-                <div>
-                  <Text>Sales</Text>
-                  <Metric>$ 12,699</Metric>
-                </div>
-                <BadgeDelta deltaType="moderateIncrease">13.2%</BadgeDelta>
-              </Flex>
-              <Flex className="mt-4">
-                <Text className="truncate">68% ($ 149,940)</Text>
-                <Text> $ 220,500 </Text>
-              </Flex>
-              <ProgressBar percentageValue={15.9} className="mt-2" />
-            </Card>
+            <Card className="max-w-lg"></Card>
+            <Card className="max-w-lg"></Card>
           </Grid>
 
           <div className="mt-6">
             <Card>
-              <div className="h-80" />
+              <Title>Cadastros de pessoas</Title>
+              <AreaChart
+                className="h-72 mt-4"
+                data={chartdata}
+                index="date"
+                categories={["SemiAnalysis", "The Pragmatic Engineer"]}
+                colors={["indigo", "cyan"]}
+                valueFormatter={dataFormatter}
+              />
             </Card>
           </div>
         </>
