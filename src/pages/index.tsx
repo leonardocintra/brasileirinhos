@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import IPessoa from "../interfaces/IPessoa";
 import { usePessoa } from "./api/catarina.api";
+import { format, subDays } from "date-fns";
 
 type Sexo = {
   tipo: string;
@@ -25,40 +26,12 @@ type Relatorio = {
   feminino: number;
 };
 
-const chartdata = [
-  {
-    date: "Jan 22",
-    SemiAnalysis: 2890,
-    "The Pragmatic Engineer": 2338,
-  },
-  {
-    date: "Feb 22",
-    SemiAnalysis: 2756,
-    "The Pragmatic Engineer": 2103,
-  },
-  {
-    date: "Mar 22",
-    SemiAnalysis: 3322,
-    "The Pragmatic Engineer": 2194,
-  },
-  {
-    date: "Apr 22",
-    SemiAnalysis: 3470,
-    "The Pragmatic Engineer": 2108,
-  },
-  {
-    date: "May 22",
-    SemiAnalysis: 3475,
-    "The Pragmatic Engineer": 1812,
-  },
-  {
-    date: "Jun 22",
-    SemiAnalysis: 3129,
-    "The Pragmatic Engineer": 1726,
-  },
-];
+interface DadosPorData {
+  [data: string]: { masculino: number; feminino: number };
+}
 
-const relatorioCadatro: Relatorio[] = [];
+const chartdata: Relatorio[] = [];
+const DATA_FILTRO = 10;
 
 export default function Home() {
   const [selectedView, setSelectedView] = useState("1");
@@ -82,24 +55,26 @@ export default function Home() {
 
   let sexoM = 0;
   let sexoF = 0;
-  const dataLimite = new Date();
-  dataLimite.setDate(dataLimite.getDate() - 90);
 
+  const resultado = pessoas.reduce(
+    (acumulador: DadosPorData, registro: IPessoa) => {
+      const { nome, sexo, createdAt } = registro;
+      const data = new Date(createdAt).toLocaleDateString();
 
-  const pessoasUltimosDias = pessoas.filter((p) => p.createdAt > dataLimite);
-  pessoasUltimosDias.map((p) => {
-    const cadastroLocaleDate = p.createdAt.toLocaleDateString();
+      if (!acumulador[data]) {
+        acumulador[data] = { masculino: 0, feminino: 0 };
+      }
 
-    if (relatorioCadatro.filter((r) => r.date === cadastroLocaleDate)) {
-      
-    }
+      if (sexo === "m") {
+        acumulador[data].masculino += 1;
+      } else if (sexo === "f") {
+        acumulador[data].feminino += 1;
+      }
 
-    relatorioCadatro.push({
-      masculino: 1,
-      feminino: 2,
-      date: cadastroLocaleDate,
-    });
-  });
+      return acumulador;
+    },
+    {}
+  );
 
   pessoas.map((pessoaData) => {
     if (pessoaData.sexo === "m") {
@@ -120,9 +95,27 @@ export default function Home() {
     }
   );
 
-  const dataFormatter = (number: number) => {
-    return "$ " + Intl.NumberFormat("us").format(number).toString();
-  };
+  if (chartdata.length === 0) {
+    const hoje = new Date();
+    for (let i = 0; i < DATA_FILTRO; i++) {
+      const data = subDays(hoje, i);
+      const dataFormatada = format(data, "dd/MM/yyyy");
+
+      if (resultado[dataFormatada]) {
+        chartdata.push({
+          date: dataFormatada,
+          masculino: resultado[dataFormatada].masculino,
+          feminino: resultado[dataFormatada].feminino,
+        });
+      } else {
+        chartdata.push({
+          date: dataFormatada,
+          masculino: 0,
+          feminino: 0,
+        });
+      }
+    }
+  }
 
   return (
     <main className="bg-slate-50 p-6 sm:p-10">
@@ -154,20 +147,37 @@ export default function Home() {
                 Se o sexo não for informado no cadastro, o padrão é MASCULINO
               </Callout>
             </Card>
-            <Card className="max-w-lg"></Card>
-            <Card className="max-w-lg"></Card>
+            <Card className="max-w-lg">
+              <Title className="text-center">Usuarios POST</Title>
+              <DonutChart
+                className="mt-6"
+                data={sexoDasPessoas}
+                category="quantidade"
+                index="tipo"
+                colors={["blue", "fuchsia"]}
+              />
+            </Card>
+            <Card className="max-w-lg">
+              <Title className="text-center">Usuarios GET</Title>
+              <DonutChart
+                className="mt-6"
+                data={sexoDasPessoas}
+                category="quantidade"
+                index="tipo"
+                colors={["blue", "fuchsia"]}
+              />
+            </Card>
           </Grid>
 
           <div className="mt-6">
             <Card>
-              <Title>Cadastros de pessoas</Title>
+              <Title>Cadastros de pessoas - Ultimos 90 dias</Title>
               <AreaChart
                 className="h-72 mt-4"
                 data={chartdata}
                 index="date"
-                categories={["SemiAnalysis", "The Pragmatic Engineer"]}
-                colors={["indigo", "cyan"]}
-                valueFormatter={dataFormatter}
+                categories={["feminino", "masculino"]}
+                colors={["rose", "blue"]}
               />
             </Card>
           </div>
