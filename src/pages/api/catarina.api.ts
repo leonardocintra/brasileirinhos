@@ -1,7 +1,7 @@
 import useSWR from "swr";
 
 const CATARINA_API_URL: string =
-  process.env.CATARINA_API_URL || "http://localhost:3005/api";
+  process.env.NEXT_PUBLIC_CATARINA_API_URL || "http://localhost:3005/api";
 
 export function usePessoa() {
   const { data, isLoading, error } = useSWR(
@@ -37,8 +37,8 @@ export default async function getToken() {
         Accept: "application/json",
       },
       body: JSON.stringify({
-        username: process.env.CATARINA_USERNAME || "leonardo",
-        password: process.env.CATARINA_PASSWORD || "C7jwurrnleo#",
+        username: process.env.NEXT_PUBLIC_CATARINA_USERNAME,
+        password: process.env.NEXT_PUBLIC_CATARINA_PASSWORD,
       }),
     };
     const response = await fetch(`${CATARINA_API_URL}/auth/login`, params);

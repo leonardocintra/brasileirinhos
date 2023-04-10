@@ -117,8 +117,6 @@ export default function Home() {
     }
   }
 
-  console.log(chartdata);
-
   return (
     <main className="bg-slate-50 p-6 sm:p-10">
       <Title>Brasileirinhos</Title>
