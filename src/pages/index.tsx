@@ -13,7 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import IPessoa from "../interfaces/IPessoa";
 import { usePessoa } from "./api/catarina.api";
-import { format, subDays } from "date-fns";
+import { format, isAfter, isBefore, subDays } from "date-fns";
 
 type Sexo = {
   tipo: string;
@@ -31,7 +31,7 @@ interface DadosPorData {
 }
 
 const chartdata: Relatorio[] = [];
-const DATA_FILTRO = 10;
+const DATA_FILTRO = 30;
 
 export default function Home() {
   const [selectedView, setSelectedView] = useState("1");
@@ -117,6 +117,8 @@ export default function Home() {
     }
   }
 
+  console.log(chartdata);
+
   return (
     <main className="bg-slate-50 p-6 sm:p-10">
       <Title>Brasileirinhos</Title>
@@ -171,13 +173,13 @@ export default function Home() {
 
           <div className="mt-6">
             <Card>
-              <Title>Cadastros de pessoas - Ultimos 90 dias</Title>
+              <Title>Cadastros de pessoas - Ultimos 30 dias</Title>
               <AreaChart
                 className="h-72 mt-4"
-                data={chartdata}
+                data={chartdata.slice().reverse()}
                 index="date"
                 categories={["feminino", "masculino"]}
-                colors={["rose", "blue"]}
+                colors={["fuchsia", "blue"]}
               />
             </Card>
           </div>
